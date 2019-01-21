@@ -168,8 +168,8 @@ angular.module('AppCommonService', ['ngCookies','ui.router'])
             
             //邮箱绑定认证
             authEmail:function($str){
-                return $http.post(option.url.api_emailAuth+'auth', $str, option.header);
-                // /itcast_p2p_action/emailAuth/auth
+                return $http.post(option.url.api_verification+'auth', $str, option.header);
+                // /itcast_p2p_action/verification/auth
             },
             //修改邮箱
             modifyEmail:function($str){

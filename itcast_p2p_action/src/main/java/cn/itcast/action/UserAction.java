@@ -30,6 +30,49 @@ import static org.apache.struts2.interceptor.DateTextFieldInterceptor.DateWord.m
 public class UserAction extends BaseAction implements ModelDriven<UserModel> {
 
     private UserModel user=new UserModel();
+    @Resource(name = "redisCache")
+    private BaseCacheService baseCacheService;
+    @Autowired
+    private IUserService userService;
+    @Autowired
+    private IUserAccountService userAccountService;
+
+
+    public String generateUserToken(String userName) {
+
+        try {
+            // 生成令牌
+            String token = TokenUtil.generateUserToken(userName);
+
+            // 根据用户名获取用户
+            UserModel user = userService.findByUsername(userName);
+            // 将用户信息存储到map中。
+            Map<String, Object> tokenMap = new HashMap<String, Object>();
+            tokenMap.put("id", user.getId());
+            tokenMap.put("userName", user.getUsername());
+            tokenMap.put("phone", user.getPhone());
+            tokenMap.put("userType", user.getUserType());
+            tokenMap.put("payPwdStatus", user.getPayPwdStatus());
+            tokenMap.put("emailStatus", user.getEmailStatus());
+            tokenMap.put("realName", user.getRealName());
+            tokenMap.put("identity", user.getIdentity());
+            tokenMap.put("realNameStatus", user.getRealNameStatus());
+            tokenMap.put("payPhoneStatus", user.getPhoneStatus());
+
+            baseCacheService.del(token);
+            baseCacheService.setHmap(token, tokenMap); // 将信息存储到redis中
+
+            // 获取配置文件中用户的生命周期，如果没有，默认是30分钟
+            String tokenValid = ConfigurableConstants.getProperty("token.validity", "30");
+            tokenValid = tokenValid.trim();
+            baseCacheService.expire(token, Long.valueOf(tokenValid) * 60);
+
+            return token;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Response.build().setStatus("-9999").toJSON();
+        }
+    }
 
     //手机认证
     @Action("addPhone")
@@ -84,50 +127,6 @@ public class UserAction extends BaseAction implements ModelDriven<UserModel> {
             return;
         } catch (IOException e) {
             e.printStackTrace();
-        }
-    }
-
-    @Resource(name = "redisCache")
-    private BaseCacheService baseCacheService;
-    @Autowired
-    private IUserService userService;
-    @Autowired
-    private IUserAccountService userAccountService;
-
-
-    public String generateUserToken(String userName) {
-
-        try {
-            // 生成令牌
-            String token = TokenUtil.generateUserToken(userName);
-
-            // 根据用户名获取用户
-            UserModel user = userService.findByUsername(userName);
-            // 将用户信息存储到map中。
-            Map<String, Object> tokenMap = new HashMap<String, Object>();
-            tokenMap.put("id", user.getId());
-            tokenMap.put("userName", user.getUsername());
-            tokenMap.put("phone", user.getPhone());
-            tokenMap.put("userType", user.getUserType());
-            tokenMap.put("payPwdStatus", user.getPayPwdStatus());
-            tokenMap.put("emailStatus", user.getEmailStatus());
-            tokenMap.put("realName", user.getRealName());
-            tokenMap.put("identity", user.getIdentity());
-            tokenMap.put("realNameStatus", user.getRealNameStatus());
-            tokenMap.put("payPhoneStatus", user.getPhoneStatus());
-
-            baseCacheService.del(token);
-            baseCacheService.setHmap(token, tokenMap); // 将信息存储到redis中
-
-            // 获取配置文件中用户的生命周期，如果没有，默认是30分钟
-            String tokenValid = ConfigurableConstants.getProperty("token.validity", "30");
-            tokenValid = tokenValid.trim();
-            baseCacheService.expire(token, Long.valueOf(tokenValid) * 60);
-
-            return token;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return Response.build().setStatus("-9999").toJSON();
         }
     }
 

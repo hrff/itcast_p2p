@@ -44,4 +44,19 @@ public class UserService implements IUserService {
     public void updatePhoneStatus(String phone, Integer id) {
         userDAO.updatePhoneStatus(phone,id);
     }
+
+    @Override
+    public void updateRealNameStatus(String realName, String identity, Integer id) {
+         userDAO.updateRealNameStatus(realName,identity,id);
+    }
+
+    @Override
+    public void addEmail(String email, int i) {
+        userDAO.addEmail(email,i);
+    }
+
+    @Override
+    public void updateEmailStatus(int i) {
+        userDAO.updateEmailStatus(i);
+    }
 }

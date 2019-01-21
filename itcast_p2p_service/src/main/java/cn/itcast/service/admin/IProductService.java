@@ -8,6 +8,5 @@ public interface IProductService {
 
     public List<Product> findAll();
     public Product findById(Long proId);
-
     public  void update(Product product);
 }
